@@ -1,10 +1,23 @@
+#!/usr/bin/env python3
+# coding=UTF-8
+'''
+@Brief: 
+@Author: Shane
+@Version: 
+@since: 2019-08-23 13:22:18
+@lastTime: 2019-08-23 13:31:00
+@LastAuthor: Shane
+'''
 import json
 from pathlib import Path
 from datetime import datetime
 from itertools import repeat
 from collections import OrderedDict
 
-
+'''
+TODO: 
++ Add pytorch summary: https://github.com/sksq96/pytorch-summary
+'''
 def ensure_dir(dirname):
     dirname = Path(dirname)
     if not dirname.is_dir():
