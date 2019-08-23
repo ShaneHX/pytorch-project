@@ -1,1 +1,1 @@
-pytorch-project
+pytorch_project
