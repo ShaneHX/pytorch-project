@@ -1,12 +1,13 @@
-from loguru import logger
-from torch.utils.data import Dataset
 from torchvision import transforms
-
+from torch.utils.data import Dataset
+from loguru import logger
 from base import BaseDataLoader
+from PIL import Image
+import os
 
 
 class CifarDataset(Dataset):
-    def __init__(self, data_index_txt):
+    def __init__(self, data_index_txt, transform=None):
         """[summary]
         Build a dataset for the dataload of pytorch
         Parameters
@@ -18,6 +19,7 @@ class CifarDataset(Dataset):
                         first, the abslute path of each image.
                         seconde, the index of the class of this image belong
         """
+        self._transform = transform
         self._img_labels = list()
         with open(data_index_txt, 'r') as fh:
             data_lines = fh.readlines()
@@ -27,13 +29,25 @@ class CifarDataset(Dataset):
                 if(len(splited_line) != 2):
                     logger.error("Find a error data index, skip it...")
                     continue
+                if not os.path.exists(splited_line[0]):
+                    logger.error(
+                        "Load image failed. {}".format(splited_line[0]))
+                    continue
                 self._img_labels.append(
                     (splited_line[0], int(splited_line[1])))
-        logger.info("Pared dataset done, the data size: {}".format(
-            len(self._img_labels)))
+        logger.info("Prepare dataset done, the data size: {}"
+                    .format(len(self._img_labels)))
 
     def __len__(self):
         return len(self._img_labels)
+
+    def __getitem__(self, index):
+        img_path, label = self._img_labels[index]
+        img = Image.open(img_path).convert('RGB')
+        if self._transform is not None:
+            img = self._transform(img)
+
+        return img, label
 
 
 class CifarDataLoader(BaseDataLoader):
@@ -51,11 +65,6 @@ class CifarDataLoader(BaseDataLoader):
             transforms.RandomCrop(32, padding=4),
             transforms.ToTensor(),
             normTransform])
-        self._dataset = CifarDataset(data_index_txt)
-        super.__init__(self._dataset, batch_size, shuffle, validation_split, num_workers)
-
-
-if __name__ == "__main__":
-    txt_path = "/home/shanehan/workspace/project_ws/pytorch-project/data/train.txt"
-    cifar_loader = CifarDataset(txt_path)
-    print(len(cifar_loader))
+        self._dataset = CifarDataset(data_index_txt, trsfm)
+        super().__init__(self._dataset, batch_size, shuffle,
+                         validation_split, num_workers)
