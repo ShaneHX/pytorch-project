@@ -52,7 +52,7 @@ class CifarDataset(Dataset):
 
 class CifarDataLoader(BaseDataLoader):
     def __init__(self,
-                 data_index_txt,
+                 data_dir,
                  batch_size,
                  shuffle=True,
                  validation_split=0.1,
@@ -65,6 +65,6 @@ class CifarDataLoader(BaseDataLoader):
             transforms.RandomCrop(32, padding=4),
             transforms.ToTensor(),
             normTransform])
-        self._dataset = CifarDataset(data_index_txt, trsfm)
+        self._dataset = CifarDataset(data_dir, trsfm)
         super().__init__(self._dataset, batch_size, shuffle,
                          validation_split, num_workers)
