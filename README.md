@@ -388,6 +388,7 @@ Code should pass the [Flake8](http://flake8.pycqa.org/en/latest/) check before c
 
 ## TODOs
 
+- [ ] Add a factory for data_loader, module and trainer
 - [ ] Using fixed random seed
 - [ ] Check pytorch 1.1
 - [ ] Multiple optimizers

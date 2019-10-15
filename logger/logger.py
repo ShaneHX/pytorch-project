@@ -1,22 +1,28 @@
-import logging
-import logging.config
-from pathlib import Path
-from utils import read_json
+import os
+from loguru import logger
 
 
-def setup_logging(save_dir, log_config='logger/logger_config.json', default_level=logging.INFO):
+def setup_logging(save_dir, model_name, timestamp, is_training=True):
+    """[summary]
+
+    Parameters
+    ----------
+    save_dir : [pathlib.PosixPath]
+        [description]: the absolute of the directory to save log file
+    model_name : [string]
+        [description]
+    timestamp : [string]
+        [description]
+    is_training : bool, optional
+        [description], by default True
     """
-    Setup logging configuration
-    """
-    log_config = Path(log_config)
-    if log_config.is_file():
-        config = read_json(log_config)
-        # modify logging paths based on run config
-        for _, handler in config['handlers'].items():
-            if 'filename' in handler:
-                handler['filename'] = str(save_dir / handler['filename'])
-
-        logging.config.dictConfig(config)
+    log_file_name = str(model_name)
+    if is_training:
+        log_file_name = "Train_" + \
+            str(model_name)+"_" + str(timestamp) + ".log"
     else:
-        print("Warning: logging configuration file is not found in {}.".format(log_config))
-        logging.basicConfig(level=default_level)
+        log_file_name = "Test_" + \
+            str(model_name) + "_" + str(timestamp)+".log"
+
+    log_file_name = save_dir.joinpath(log_file_name)
+    logger.add(str(log_file_name))
