@@ -3,6 +3,7 @@ from abc import abstractmethod
 from numpy import inf
 from loguru import logger
 from logger import TensorboardWriter
+from apex import amp
 
 
 class BaseTrainer:
@@ -10,7 +11,7 @@ class BaseTrainer:
     Base class for all trainers
     """
 
-    def __init__(self, model, loss, metrics, optimizer, config):
+    def __init__(self, model, loss, metrics, optimizer, config, use_apex=True):
         self.config = config
 
         # setup GPU device if available, move model into configured device
@@ -18,10 +19,12 @@ class BaseTrainer:
         self.model = model.to(self.device)
         if len(device_ids) > 1:
             self.model = torch.nn.DataParallel(model, device_ids=device_ids)
-
         self.loss = loss
         self.metrics = metrics
         self.optimizer = optimizer
+        if use_apex:
+            self.model, self.optimizer = amp.initialize(
+                self.model, self.optimizer, opt_level="O1")
 
         cfg_trainer = config['trainer']
         self.epochs = cfg_trainer['epochs']

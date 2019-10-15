@@ -4,6 +4,7 @@ from torchvision.utils import make_grid
 from base import BaseTrainer
 from utils import inf_loop
 from loguru import logger
+from apex import amp
 
 
 class Trainer(BaseTrainer):
@@ -14,9 +15,19 @@ class Trainer(BaseTrainer):
         Inherited from BaseTrainer.
     """
 
-    def __init__(self, model, loss, metrics, optimizer, config, data_loader,
-                 valid_data_loader=None, lr_scheduler=None, len_epoch=None):
-        super().__init__(model, loss, metrics, optimizer, config)
+    def __init__(self,
+                 model,
+                 loss,
+                 metrics,
+                 optimizer,
+                 config,
+                 data_loader,
+                 valid_data_loader=None,
+                 lr_scheduler=None,
+                 len_epoch=None,
+                 use_apex=True):
+
+        super().__init__(model, loss, metrics, optimizer, config, use_apex)
         self.config = config
         self.data_loader = data_loader
         if len_epoch is None:
@@ -30,13 +41,14 @@ class Trainer(BaseTrainer):
         self.do_validation = self.valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
+        self.use_apex = use_apex
 
     def _eval_metrics(self, output, target):
         acc_metrics = np.zeros(len(self.metrics))
         for i, metric in enumerate(self.metrics):
             acc_metrics[i] += metric(output, target)
-            self.writer.add_scalar('{}'.format(
-                metric.__name__), acc_metrics[i])
+            self.writer.add_scalar('{}'.format(metric.__name__),
+                                   acc_metrics[i])
         return acc_metrics
 
     def _train_epoch(self, epoch):
@@ -65,7 +77,9 @@ class Trainer(BaseTrainer):
             self.optimizer.zero_grad()
             output = self.model(data)
             loss = self.loss(output, target)
-            loss.backward()
+            if self.use_apex:
+                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                    scaled_loss.backward()
             self.optimizer.step()
 
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
@@ -75,11 +89,9 @@ class Trainer(BaseTrainer):
 
             if batch_idx % self.log_step == 0:
                 logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
-                    epoch,
-                    self._progress(batch_idx),
-                    loss.item()))
-                self.writer.add_image('input', make_grid(
-                    data.cpu(), nrow=8, normalize=True))
+                    epoch, self._progress(batch_idx), loss.item()))
+                self.writer.add_image(
+                    'input', make_grid(data.cpu(), nrow=8, normalize=True))
 
             if batch_idx == self.len_epoch:
                 break
@@ -118,20 +130,23 @@ class Trainer(BaseTrainer):
                 loss = self.loss(output, target)
 
                 self.writer.set_step(
-                    (epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
+                    (epoch - 1) * len(self.valid_data_loader) + batch_idx,
+                    'valid')
                 self.writer.add_scalar('loss', loss.item())
                 total_val_loss += loss.item()
                 total_val_metrics += self._eval_metrics(output, target)
-                self.writer.add_image('input', make_grid(
-                    data.cpu(), nrow=8, normalize=True))
+                self.writer.add_image(
+                    'input', make_grid(data.cpu(), nrow=8, normalize=True))
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
             self.writer.add_histogram(name, p, bins='auto')
 
         return {
-            'val_loss': total_val_loss / len(self.valid_data_loader),
-            'val_metrics': (total_val_metrics / len(self.valid_data_loader)).tolist()
+            'val_loss':
+            total_val_loss / len(self.valid_data_loader),
+            'val_metrics':
+            (total_val_metrics / len(self.valid_data_loader)).tolist()
         }
 
     def _progress(self, batch_idx):
