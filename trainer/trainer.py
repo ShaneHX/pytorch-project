@@ -35,7 +35,8 @@ class Trainer(BaseTrainer):
         acc_metrics = np.zeros(len(self.metrics))
         for i, metric in enumerate(self.metrics):
             acc_metrics[i] += metric(output, target)
-            # self.writer.add_scalar('{}'.format(metric.__name__), acc_metrics[i])
+            self.writer.add_scalar('{}'.format(
+                metric.__name__), acc_metrics[i])
         return acc_metrics
 
     def _train_epoch(self, epoch):
@@ -67,8 +68,8 @@ class Trainer(BaseTrainer):
             loss.backward()
             self.optimizer.step()
 
-            # self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
-            # self.writer.add_scalar('loss', loss.item())
+            self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
+            self.writer.add_scalar('loss', loss.item())
             total_loss += loss.item()
             total_metrics += self._eval_metrics(output, target)
 
@@ -77,7 +78,8 @@ class Trainer(BaseTrainer):
                     epoch,
                     self._progress(batch_idx),
                     loss.item()))
-                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                self.writer.add_image('input', make_grid(
+                    data.cpu(), nrow=8, normalize=True))
 
             if batch_idx == self.len_epoch:
                 break
@@ -115,15 +117,17 @@ class Trainer(BaseTrainer):
                 output = self.model(data)
                 loss = self.loss(output, target)
 
-                # self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
-                # self.writer.add_scalar('loss', loss.item())
+                self.writer.set_step(
+                    (epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
+                self.writer.add_scalar('loss', loss.item())
                 total_val_loss += loss.item()
                 total_val_metrics += self._eval_metrics(output, target)
-                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                self.writer.add_image('input', make_grid(
+                    data.cpu(), nrow=8, normalize=True))
 
         # add histogram of model parameters to the tensorboard
-        # for name, p in self.model.named_parameters():
-        #     self.writer.add_histogram(name, p, bins='auto')
+        for name, p in self.model.named_parameters():
+            self.writer.add_histogram(name, p, bins='auto')
 
         return {
             'val_loss': total_val_loss / len(self.valid_data_loader),
