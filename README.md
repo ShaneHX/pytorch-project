@@ -394,6 +394,7 @@ Code should pass the [Flake8](http://flake8.pycqa.org/en/latest/) check before c
 - [ ] Multiple optimizers
 - [ ] Support pytorch native tensorboard
 - [ ] Support more tensorboard functions
+- [ ] Support trainning with [apex](https://github.com/NVIDIA/apex)
 - [x] `tensorboardX` logger support
 - [x] Configurable logging layout, checkpoint naming
 - [x] Iteration-based training (instead of epoch-based)
