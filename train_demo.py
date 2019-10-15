@@ -8,6 +8,8 @@ import model.model as module_arch
 from parse_config import ConfigParser
 from trainer import Trainer
 from loguru import logger
+import multiprocessing
+multiprocessing.set_start_method('spawn', True)
 
 
 def main(config):

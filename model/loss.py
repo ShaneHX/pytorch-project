@@ -1,5 +1,6 @@
+
 import torch.nn.functional as F
 
 
-def nll_loss(output, target):
-    return F.nll_loss(output, target)
+def demo_loss(outputs, target):
+    return F.cross_entropy(outputs, target)
