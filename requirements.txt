@@ -1,0 +1,8 @@
+numpy==1.16.4
+opencv_python==4.1.0.25
+torch==1.2.0+cu92
+tqdm==4.36.1
+loguru==0.3.0
+torchvision==0.4.0+cu92
+Pillow==6.2.0
+apex==0.9.10dev
