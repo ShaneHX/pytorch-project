@@ -32,7 +32,8 @@ class ConfigParser:
 
         # set save_dir where trained model and log will be saved.
         save_dir = Path(self.config['trainer']['save_dir']).resolve()
-        timestamp = datetime.now().strftime(r'%Y%m%d-%H%M%S') if timestamp else ''
+        timestamp = datetime.now().strftime(
+            r'%Y%m%d-%H%M%S') if timestamp else ''
 
         exper_name = self.config['name']
         self._save_dir = save_dir / 'models' / exper_name / timestamp
@@ -45,8 +46,7 @@ class ConfigParser:
         write_json(self.config, self.save_dir / 'config.json')
 
         # configure logging module
-        setup_logging(self.log_dir, exper_name,
-                      timestamp, self.is_training)
+        setup_logging(self.log_dir, exper_name, timestamp, self.is_training)
 
     def initialize(self, name, module, *args, **kwargs):
         """
@@ -55,13 +55,15 @@ class ConfigParser:
         """
         module_name = self[name]['type']
         module_args = dict(self[name]['args'])
-        assert all([k not in module_args for k in kwargs]
-                   ), 'Overwriting kwargs given in config file is not allowed'
+        assert all([
+            k not in module_args for k in kwargs
+        ]), 'Overwriting kwargs given in config file is not allowed'
         module_args.update(kwargs)
         return getattr(module, module_name)(*args, **module_args)
 
     def __getitem__(self, name):
         return self.config[name]
+
     # setting read-only attributes
     @property
     def config(self):
@@ -74,6 +76,7 @@ class ConfigParser:
     @property
     def log_dir(self):
         return self._log_dir
+
 
 # helper functions used to update config dict with custom cli options
 
