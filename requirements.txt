@@ -4,5 +4,5 @@ torch==1.2.0+cu92
 tqdm==4.36.1
 loguru==0.3.0
 torchvision==0.4.0+cu92
-Pillow==6.2.0
+Pillow==8.3.2
 apex==0.9.10dev
